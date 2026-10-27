@@ -4,7 +4,7 @@ This bundle holds PREFIRE_AUX_MET at its R01 release (https://github.com/UW-PREF
 
 ## 1. PREFIRE_sim_tools comes from a copy that does not import `hsremis` at load time
 
-- **What:** the `PREFIRE_sim_tools` submodule points to https://github.com/gchang/prefire-sim-tools at `bcbdd0b`, not to the upstream repository. That copy is upstream R01 (`9cf1becfbd4ffab850766bcf828c3ec0364d2ef0`) with one line removed: `from . import hsremis` in `PREFIRE_sim_tools/utils/__init__.py`. Its own `MAAP_CHANGES.md` has the details.
+- **What:** the `PREFIRE_sim_tools` submodule points to https://github.com/gchang/prefire-sim-tools at `5bcf206` (tag `R01.post2`), not to the upstream repository. That copy is upstream R01 (`9cf1becfbd4ffab850766bcf828c3ec0364d2ef0`) with one line removed: `from . import hsremis` in `PREFIRE_sim_tools/utils/__init__.py`. Its own `MAAP_CHANGES.md` has the details. The check of 2026-10-27 ran with the copy's earlier commit `bcbdd0b`; `5bcf206` changes only that repository's MAAP_CHANGES.md, so the code is the same.
 - **Why:** `hsremis.py` opens `UWiremis_labeigvects.nc` as soon as it is imported. That file is excluded by the repository's `.gitignore` and is in no public archive, so with the upstream code `dist/produce_AUX.py` stops with `FileNotFoundError` before reading any input. AUX-MET uses only `PREFIRE_sim_tools.utils.level_interp` and `PREFIRE_sim_tools.paths`; nothing in PREFIRE_AUX_MET, PREFIRE_PRD_GEN or PREFIRE_tools refers to `hsremis`. No results change.
 - **Who asked:** our own change, made at the lead's request on 2026-10-27. We found the failure in our own test of AUX-MET. The registration wizard's analysis of AUX-MET did not report it: it did not read the sibling repositories.
 
