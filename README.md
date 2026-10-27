@@ -16,7 +16,7 @@ What this means for the results:
 
 - Fields that do not come from the analysis match the official product. After the finalization step below, VIIRS surface type, xCO2, xCH4, the Antarctic land and ice shelf fractions, the pressure grid and the land fraction data source are all identical to it. In the raw file before finalization, the Antarctic fractions agree within 3e-5 and xCO2 within 0.004 ppm, which is the archive's rounding.
 - **Every field that comes from the analysis differs from the official product, as two reanalyses do.** For SAT1 orbit 01877 (2024-10-07, 52,880 footprints): `temp_profile` mean absolute difference 1.2 K (r = 0.994), `skin_temp` 1.05 K, `surface_pressure` 0.45 hPa, `total_column_wv` 1.2 mm, winds 1.7 to 1.9 m/s (r = 0.97), `omega_profile` r = 0.75. `merged_surface_type_prelim` gives the same class at 96.4% of footprints; the rest differ in sea ice and snow classes, which come from the analysis.
-- The product records its analysis in the `met_analysis_ID` attribute of the `Aux-Met` group, so a MERRA-2 run is labeled with the MERRA-2 collection titles and `GEOSIT_equal_angle`, not "GEOS-IT".
+- The product records its analysis in two attributes of the `Aux-Met` group. `met_analysis_ID` names the MERRA-2 collections, so a stand-in run can be told apart. `met_analysis_name` still says `GEOSIT_equal_angle`, because it is the `ANALYSIS_SOURCE` mode the code runs in (`utils/data_IO.py:331`), not the data source. The code accepts only its own mode names, so this bundle leaves it as it is. Read `met_analysis_ID` to tell which analysis was used.
 
 A team member with GEOS-IT access runs the same code on GEOS-IT files instead (see "Operational mode" below).
 
