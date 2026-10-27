@@ -1,0 +1,12 @@
+[submodule "PREFIRE_AUX_MET"]
+	path = PREFIRE_AUX_MET
+	url = https://github.com/UW-PREFIRE/PREFIRE_AUX_MET.git
+[submodule "PREFIRE_PRD_GEN"]
+	path = PREFIRE_PRD_GEN
+	url = https://github.com/UW-PREFIRE/PREFIRE_PRD_GEN.git
+[submodule "PREFIRE_tools"]
+	path = PREFIRE_tools
+	url = https://github.com/UW-PREFIRE/PREFIRE_tools.git
+[submodule "PREFIRE_sim_tools"]
+	path = PREFIRE_sim_tools
+	url = https://github.com/gchang/prefire-sim-tools.git
