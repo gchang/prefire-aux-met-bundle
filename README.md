@@ -14,7 +14,7 @@ This bundle runs the code on **MERRA-2 as a stand-in for GEOS-IT**. MERRA-2 is p
 
 What this means for the results:
 
-- Fields that do not come from the analysis match the official product exactly or to its rounding: VIIRS surface type, xCH4, the pressure grid and the land fraction data source are identical, the Antarctic fractions agree within 3e-5, and xCO2 within 0.004 ppm.
+- Fields that do not come from the analysis match the official product. After the finalization step below, VIIRS surface type, xCO2, xCH4, the Antarctic land and ice shelf fractions, the pressure grid and the land fraction data source are all identical to it. In the raw file before finalization, the Antarctic fractions agree within 3e-5 and xCO2 within 0.004 ppm, which is the archive's rounding.
 - **Every field that comes from the analysis differs from the official product, as two reanalyses do.** For SAT1 orbit 01877 (2024-10-07, 52,880 footprints): `temp_profile` mean absolute difference 1.2 K (r = 0.994), `skin_temp` 1.05 K, `surface_pressure` 0.45 hPa, `total_column_wv` 1.2 mm, winds 1.7 to 1.9 m/s (r = 0.97), `omega_profile` r = 0.75. `merged_surface_type_prelim` gives the same class at 96.4% of footprints; the rest differ in sea ice and snow classes, which come from the analysis.
 - The product records its analysis in the `met_analysis_ID` attribute of the `Aux-Met` group, so a MERRA-2 run is labeled with the MERRA-2 collection titles and `GEOSIT_equal_angle`, not "GEOS-IT".
 
@@ -112,7 +112,7 @@ export PACKAGE_TOP_DIR=$PWD/PREFIRE_AUX_MET ANCILLARY_DATA_DIR=$PWD/PREFIRE_AUX_
 python PREFIRE_AUX_MET/dist/produce_AUX.py
 ```
 
-The product is `/path/to/raw/raw-PREFIRE_SAT1_AUX-MET_R01_P00_20241007075724_01877.nc` (about 97 MB). The helper writes 19 files (517 MB) for this orbit: the constants, the 3-hourly state at 06, 09 and 12 UTC, and the hourly single-level, land and ocean fields from 06 to 10 UTC; the code uses those that bracket the orbit and stops with `FileNotFoundError` naming the file if one is missing. The configuration is read only from these environment variables; `produce_AUX.py` takes no arguments. `PREFIRE_AUX_MET/README.md` describes each variable.
+The product is `/path/to/raw/raw-PREFIRE_SAT1_AUX-MET_R01_P00_20241007075724_01877.nc` (about 97 MB). The helper writes 19 files (541 MB) for this orbit in about half a minute: the constants, the 3-hourly state at 06, 09 and 12 UTC, and the hourly single-level, land and ocean fields from 06 to 10 UTC; the code uses those that bracket the orbit and stops with `FileNotFoundError` naming the file if one is missing. The configuration is read only from these environment variables; `produce_AUX.py` takes no arguments. `PREFIRE_AUX_MET/README.md` describes each variable.
 
 The mission's own test script, `PREFIRE_AUX_MET/test/run.sh`, sets the same variables for two short frame ranges (SAT1 01877 and SAT2 02040) in cubed-sphere mode, with inputs in `PREFIRE_AUX_MET/test/inputs/`. To use it with the stand-in, copy it to `my-run.sh`, set `ANALYSIS_SOURCE="GEOSIT_equal_angle"`, and point `L1B_cfg_str1` and `MET_AN_DIR` at your files.
 
@@ -146,10 +146,14 @@ An earlier check ran the cubed-sphere ESMF step under `mpirun -n 6` on the same 
 
 ## Run time, memory and disk
 
-About 21 minutes on one core for a full orbit (6,610 frames, 52,880 footprints), peak memory about 4.7 GB. About 19 minutes of that is the VIIRS surface type classification, which does not depend on the analysis, so a GEOS-IT run takes about as long. Peak memory is about 4 GB even for a few hundred frames. The code supports frame ranges (`ATRACK_IDX_RANGE_0BI`, for example `ATRACK_IDXRANGE_0BASED_INCLUSIVE:0:3304`), and each range writes its own raw file named after the range, so an orbit can be split across processes; merging such parts with the finalization step was not checked for AUX-MET.
+About 21 to 24 minutes on one core for a full orbit (6,610 frames, 52,880 footprints), peak memory 4.7 GB; finalization takes a few seconds and 0.5 GB. About 19 to 22 minutes of that is the VIIRS surface type classification, which does not depend on the analysis, so a GEOS-IT run takes about as long. Peak memory is about 4 GB even for a few hundred frames. The code supports frame ranges (`ATRACK_IDX_RANGE_0BI`, for example `ATRACK_IDXRANGE_0BASED_INCLUSIVE:0:3304`), and each range writes its own raw file named after the range, so an orbit can be split across processes; merging such parts with the finalization step was not checked for AUX-MET.
 
-Disk: 2.8 GB of MERRA-2 downloads, 517 MB of stand-in files, 129 MB zip plus 138 MB unpacked ancillary data, and the 97 MB raw product. The MERRA-2 daily files can be deleted once the helper has run.
+Disk: 2.8 GB of MERRA-2 downloads, 541 MB of stand-in files, 129 MB zip plus 138 MB unpacked ancillary data, and the 97 MB raw product. The MERRA-2 daily files can be deleted once the helper has run.
 
 ## Known issue: fill values in two fields
 
 `land_surface_temp` and `snow_cover` can hold values up to about 1e11 at a few coastal footprints. GEOS land fields are 1e15 over water, and `interp_ESMF.py` (line 195 for equal-angle, 345 for cubed sphere) marks an interpolated value as missing only above `fill * 1e-4`, so a small bilinear weight on a water neighbor gets through. The official R01 granule has the same two footprints (7.06e10) in orbit 01877. This bundle leaves the R01 code as released.
+
+## Checked on 2026-10-27
+
+From a fresh `git clone --recurse-submodules` placed under a folder path of 221 characters, with the environment from `environment.yml` and without `UWiremis_labeigvects.nc`, the commands above ran as written for SAT1 orbit 01877 (all 6,610 frames) on the MERRA-2 stand-in for 2024-10-07, with no network. `produce_AUX.py` took 23 min 54 s on one core with a 4.73 GB peak, and finalization took 5 s. The product's provenance lists the pinned commits with no `(modified)`, and the submodules stayed clean. The comparison with the official ASDC R01 granule is the same, field for field, as an earlier run of the same R01 code on the same stand-in, made outside this bundle: 6,610 of 6,610 frames matched, and the numbers are the ones given under "The analysis input" above. After finalization, every field that does not depend on the analysis is identical to the official granule.
